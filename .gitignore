@@ -42,3 +42,10 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+
+# amplify
+node_modules
+.amplify
+amplify_outputs*
+amplifyconfiguration*
