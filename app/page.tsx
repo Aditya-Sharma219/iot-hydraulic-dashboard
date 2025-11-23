@@ -57,88 +57,81 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const loading = telemetry === null;
-  const machineName = "Hydraulic Rubber Molding Machine - Unit 1";
+  // fallback so UI never breaks
+  const t = telemetry ?? {
+    temperature: 0,
+    pressure: 0,
+    vibration: 0,
+    cycleCount: 0,
+    status: "Offline",
+    alerts: [],
+    prediction: null,
+    history: [],
+  };
 
   const statusColor =
-    telemetry?.status === "Running"
+    t.status === "Running"
       ? "text-emerald-400"
-      : telemetry?.status === "Idle"
-        ? "text-yellow-400"
-        : telemetry?.status === "Error"
-          ? "text-red-400"
-          : "text-slate-300";
+      : t.status === "Error"
+      ? "text-red-400"
+      : t.status === "Idle"
+      ? "text-yellow-400"
+      : "text-slate-300";
 
-  const format = (num: number | undefined) => num?.toLocaleString() ?? "...";
+  const format = (num: number | undefined) =>
+    num?.toLocaleString() ?? "--";
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <section className="flex-1 p-6 space-y-8 animate-in fade-in duration-300">
-
-        {/* Header */}
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold">{machineName}</h2>
-          <p className="text-sm text-slate-400">
-            Real-time monitoring • LIVE Cloud Data
+      <section className="flex-1 p-6 space-y-10 animate-in fade-in duration-300 max-w-8xl mx-auto w-full">
+        
+        {/* Machine title */}
+        <header>
+          <h2 className="text-3xl font-bold">Hydraulic Rubber Molding Machine</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            Real-time cloud monitoring • AWS IoT + AI Predictive Maintenance
           </p>
-        </div>
+        </header>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SensorCard title="Temperature" value={telemetry?.temperature} unit="°C" />
-          <SensorCard title="Pressure" value={telemetry?.pressure} unit="bar" />
-          <SensorCard title="Vibration" value={telemetry?.vibration} unit="g" />
-          <SensorCard title="Cycle Count" value={format(telemetry?.cycleCount)} />
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <SensorCard title="Temperature" value={t.temperature} unit="°C" />
+          <SensorCard title="Pressure" value={t.pressure} unit="bar" />
+          <SensorCard title="Vibration" value={t.vibration} unit="g" />
+          <SensorCard title="Cycle Count" value={format(t.cycleCount)} />
         </div>
 
         {/* Machine Status */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
           <h3 className="text-sm font-medium text-slate-400">Machine Status</h3>
-          <div className="flex items-center gap-2 text-xl font-semibold mt-1">
+          <div className="flex items-center gap-3 mt-2 text-xl font-semibold">
             <span
-              className={`h-3 w-3 rounded-full animate-pulse ${telemetry?.status === "Running"
-                ? "bg-emerald-400"
-                : telemetry?.status === "Error"
+              className={`h-3 w-3 rounded-full animate-pulse ${
+                t.status === "Running"
+                  ? "bg-emerald-400"
+                  : t.status === "Error"
                   ? "bg-red-400"
-                  : telemetry?.status === "Idle"
-                    ? "bg-yellow-400"
-                    : "bg-slate-500"
-                }`}
+                  : t.status === "Idle"
+                  ? "bg-yellow-400"
+                  : "bg-slate-500"
+              }`}
             />
-            {loading ? "..." : telemetry?.status}
+            {t.status}
           </div>
         </div>
 
         {/* Graph */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
-          <h3 className="text-lg font-semibold mb-4">Live Telemetry Graphs</h3>
+          <h3 className="text-lg font-semibold mb-4">Telemetry Graph (Live)</h3>
           <ResponsiveContainer width="100%" height={330}>
-            <LineChart data={telemetry?.history ?? []} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <LineChart data={t.history ?? []}>
               <XAxis dataKey="timestamp" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155" }} />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="temperature"
-                stroke="#f43f5e"
-                strokeWidth={2.4}
-                dot={{ r: 5, stroke: "#f43f5e", strokeWidth: 3, fill: "#1e1b2e" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="pressure"
-                stroke="#38bdf8"
-                strokeWidth={2.4}
-                dot={{ r: 5, stroke: "#38bdf8", strokeWidth: 3, fill: "#1e1b2e" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="vibration"
-                stroke="#a78bfa"
-                strokeWidth={2.4}
-                dot={{ r: 5, stroke: "#a78bfa", strokeWidth: 3, fill: "#1e1b2e" }}
-              />
+              <Line type="monotone" dataKey="temperature" stroke="#f43f5e" strokeWidth={2.4} dot />
+              <Line type="monotone" dataKey="pressure" stroke="#38bdf8" strokeWidth={2.4} dot />
+              <Line type="monotone" dataKey="vibration" stroke="#a78bfa" strokeWidth={2.4} dot />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -146,15 +139,12 @@ export default function Home() {
         {/* Alerts */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
           <h3 className="text-lg font-semibold mb-4">Alerts</h3>
-          {telemetry?.alerts?.length ? (
+          {t.alerts?.length ? (
             <div className="space-y-2">
-              {telemetry.alerts.map((alert, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-md bg-red-950/40 border border-red-700/30 shadow-sm shadow-red-500/10 text-sm"
-                >
-                  <span className="text-red-400 font-semibold">{alert.type}</span> — {alert.message}
-                  <span className="text-xs text-slate-400 ml-2">{alert.timestamp}</span>
+              {t.alerts.map((a, idx) => (
+                <div key={idx} className="p-3 rounded-md bg-red-950/40 border border-red-600/30">
+                  <span className="font-semibold text-red-400">{a.type}</span> — {a.message}
+                  <span className="text-xs text-slate-400 ml-2">{a.timestamp}</span>
                 </div>
               ))}
             </div>
@@ -165,69 +155,63 @@ export default function Home() {
 
         {/* AI Prediction */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
-          <h3 className="text-lg font-semibold mb-4">Predictive AI — Maintenance</h3>
+          <h3 className="text-lg font-semibold mb-4">AI Predictive Maintenance</h3>
 
-          {telemetry?.prediction ? (
+          {!t.prediction ? (
+            <p className="text-slate-400 text-sm">⏳ AI analyzing data...</p>
+          ) : (
             <div className="space-y-4">
-              {/* Risk Label */}
-              <div
-                className={`px-4 py-2 rounded-lg font-semibold text-sm inline-block ${telemetry.prediction.riskLevel === "High"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                    : telemetry.prediction.riskLevel === "Moderate"
-                      ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40"
-                      : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                  }`}
+              {/* Badge */}
+              <span
+                className={`px-4 py-2 text-sm font-semibold rounded-lg inline-block ${
+                  t.prediction.riskLevel === "High"
+                    ? "bg-red-600/30 text-red-300"
+                    : t.prediction.riskLevel === "Moderate"
+                    ? "bg-yellow-500/30 text-yellow-200"
+                    : "bg-emerald-600/30 text-emerald-300"
+                }`}
               >
-                🔥 Risk Level: {telemetry.prediction.riskLevel}
-              </div>
+                🔥 Risk Level: {t.prediction.riskLevel}
+              </span>
 
-              {/* Failure Probability */}
+              {/* Probability */}
               <p className="text-sm font-medium">
                 Failure Probability:
-                <span
-                  className={`font-bold ml-1 ${telemetry.prediction.failureProbability >= 65
-                      ? "text-red-400"
-                      : telemetry.prediction.failureProbability >= 30
-                        ? "text-yellow-400"
-                        : "text-emerald-400"
-                    }`}
-                >
-                  {telemetry.prediction.failureProbability}%
+                <span className="ml-2 font-bold text-lg">
+                  {t.prediction.failureProbability}%
                 </span>
               </p>
 
-              {/* Risk Progress Bar */}
-              <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden shadow-inner">
+              {/* Bar */}
+              <div className="w-full h-3 bg-slate-800 rounded-full shadow-inner overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-700 ${telemetry.prediction.failureProbability >= 65
+                  className={`h-full transition-all duration-700 ${
+                    t.prediction.failureProbability >= 65
                       ? "bg-red-500"
-                      : telemetry.prediction.failureProbability >= 30
-                        ? "bg-yellow-400"
-                        : "bg-emerald-400"
-                    }`}
-                  style={{ width: `${telemetry.prediction.failureProbability}%` }}
-                ></div>
+                      : t.prediction.failureProbability >= 30
+                      ? "bg-yellow-400"
+                      : "bg-emerald-400"
+                  }`}
+                  style={{ width: `${t.prediction.failureProbability}%` }}
+                />
               </div>
 
               {/* Maintenance Date */}
               <p className="text-sm font-medium">
-                Maintenance Date:
-                <span className="ml-2 text-base font-bold text-blue-300 underline tracking-wide">
-                  {telemetry.prediction.maintenanceDate}
+                Recommended Maintenance:
+                <span className="ml-2 text-blue-300 underline font-semibold">
+                  {t.prediction.maintenanceDate}
                 </span>
               </p>
             </div>
-          ) : (
-            <p className="text-slate-400 text-sm">⏳ AI is analyzing machine health...</p>
           )}
         </div>
-
       </section>
     </main>
   );
 }
 
-/* Sensor Card Component */
+/* Card Component */
 function SensorCard({
   title,
   value,
@@ -238,9 +222,9 @@ function SensorCard({
   unit?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-md hover:shadow-[0_0_15px_#6c47ff55] transition cursor-default">
-      <h3 className="text-sm font-medium text-slate-400 mb-2">{title}</h3>
-      <p className="text-4xl font-semibold tracking-tight">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-md hover:shadow-[0_0_12px_#6c47ff66] transition">
+      <h3 className="text-slate-400 text-sm mb-1">{title}</h3>
+      <p className="text-4xl font-bold">
         {value ?? "--"}
         {unit && <span className="text-base text-slate-400"> {unit}</span>}
       </p>
