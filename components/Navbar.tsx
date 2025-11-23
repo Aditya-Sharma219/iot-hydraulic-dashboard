@@ -1,7 +1,4 @@
 "use client";
-export const dynamic = 'force-static';
-export const revalidate = 60;
-
 import {
   SignInButton,
   SignUpButton,
