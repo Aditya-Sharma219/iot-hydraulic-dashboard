@@ -9,7 +9,7 @@ import {
 
 export default function Navbar() {
   return (
-    <nav className="w-full h-16 bg-[#0f0f10] border-b border-[#222] flex items-center justify-between px-6">
+    <nav className="sticky top-0 z-50 w-full h-16 bg-[#0f0f10] border-b border-[#222] flex items-center justify-between px-6">
       {/* Logo */}
       <h1 className="text-xl font-semibold text-white select-none tracking-tight">
         <span className="text-[#6c47ff]">Rubber</span> Molding
@@ -32,9 +32,10 @@ export default function Navbar() {
         </SignedOut>
 
         <SignedIn>
-          <UserButton afterSignOutUrl="/" appearance={{
-            elements: { avatarBox: "w-9 h-9" }
-          }} />
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{ elements: { avatarBox: "w-9 h-9" } }}
+          />
         </SignedIn>
       </div>
     </nav>
